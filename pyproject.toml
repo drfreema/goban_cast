@@ -1,0 +1,55 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "goban-cast"
+version = "0.1.0"
+description = "Play Go on a physical board with a webcam, a projected overlay, and online-go.com"
+readme = "README.md"
+requires-python = ">=3.13"
+license = { text = "GPL-3.0-or-later" }
+authors = [{ name = "Dirk Freeman" }]
+keywords = ["go", "baduk", "computer-vision", "online-go", "projector"]
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Environment :: X11 Applications :: Qt",
+  "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Games/Entertainment :: Board Games",
+]
+dependencies = [
+  "numpy>=2.1",
+  "opencv-python-headless>=4.10",
+  "PySide6>=6.7",
+  "httpx>=0.27",
+  "websockets>=14",
+  "pydantic>=2.9",
+  "pydantic-settings>=2.5",
+  "platformdirs>=4.3",
+  "keyring>=25",
+  "sgfmill>=0.3.3",
+]
+
+[dependency-groups]
+dev = ["pytest>=8.3", "ruff>=0.7"]
+
+[project.scripts]
+goban-cast = "goban_cast.app:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/goban_cast"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+markers = ["vision: tests that need recorded frame fixtures"]
