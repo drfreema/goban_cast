@@ -85,6 +85,8 @@ src/goban_cast/
 
 **State machine:** `unconfigured → calibrating → observing → awaiting_opponent → applying_move → game_over`, plus `paused`/`error`. Every transition is logged with the board hash for post-mortems.
 
+**Two operating modes share the pipeline:** `online` (attached to an OGS game, M5) and `referee` (optional M3.5 — both colours are observed locally, no network, no projector).
+
 **Config:** `pydantic-settings` + TOML profiles under `~/.config/goban_cast/profiles/<name>.toml` holding camera/projector geometry, thresholds, board size. OAuth tokens go to the OS keyring, never to config or the repo.
 
 **Overlay contents (v1):** opponent's last move, own last move, capture rings + counts, turn indicator, both clocks, 9×9 coordinate labels, connection/status strip.
@@ -170,11 +172,51 @@ v1 does **not** create challenges or run automatch. Create the 9×9 challenge on
 | M1 | Capture, corner pick, warp, 9×9 grid, rotation, vendored detector, state dump | 2–3 d | Grid aligned to bamboo board; zero false stones over 5 min idle |
 | M2 | Calibration wizard, baselines, bamboo hardening, fixture recorder, confidence UI | 3–5 d | Survives daylight/lamp changes without recalibration; fixtures in CI |
 | M3 | Rules, captures, ko, pass, resign, undo, SGF export | 2 d | Referees a full 9×9 game played on the board |
+| M3.5 (optional) | **Local referee mode** — see §6.1 | 2–3 d | A full self-play 9×9 game of ≥60 moves exports SGF that loads in Sabaki/OGS review with correct captures; no more than one undo |
 | M4 | Overlay rendering, preview window, projector screen selection, camera-assisted auto-align | 3–4 d | Overlay lands on correct intersections in preview; auto-align converges with a stand-in display |
 | M5 | OGS client: OAuth, keyring, MockOGS, `--game`, move send/receive, clocks, phase, reconnect | 4–6 d | Complete a live 9×9 game on OGS with no browser |
 | M6 | Physical projector validation + packaging (PKGBUILD / `uv tool install`) | 1 wk, hardware | Real game with stones and projection |
 
-Total ≈ **7–9 weeks part-time**. S1 and M5 touch no camera code and can run in a parallel session (see §8).
+Total ≈ **7–9 weeks part-time**, plus 2–3 days if the optional referee milestone is taken. S1 and M5 touch no camera code and can run in a parallel session (see §8).
+
+## 6.1 Optional milestone M3.5 — Local referee mode
+
+**Purpose.** A genuinely useful product before any projector exists: two people play
+on the physical board, and the app acts as referee and scorekeeper. It exercises the
+whole vision + rules pipeline end to end without OGS, clocks, or projection, so it
+de-risks M4/M5 and gives something to use on the board immediately.
+
+**Depends on:** M1, M2 (detection must be trustworthy) and M3 (rules). Everything it
+needs already exists by then.
+
+**Scope**
+
+- `goban-cast --referee` (no game id, no projector): both colours are observed on the
+  board, moves alternate automatically.
+- Confirms each detected move against the rules: legality, captures, ko, suicide,
+  and whose turn it is. Illegal or ambiguous detections are refused, not applied.
+- Announces captures and rejected moves in the status panel and with a short sound
+  cue; the laptop screen shows board, last move, captures, and move count.
+- Keyboard undo of the last move (mis-detection recovery), and pass / resign.
+- Resume from an SGF file and export the finished game as SGF (`sgfmill`), including
+  captures and move numbers.
+- Minimal rendering: a text/status panel plus the existing debug grid. It must **not**
+  build projector-specific overlay work — that stays in M4.
+
+**Explicitly out of scope:** clocks, OGS, projector alignment, record/analysis,
+variations, multiple games at once.
+
+**Acceptance**
+
+1. Play a complete self-play 9×9 game of at least 60 moves with the app refereeing.
+2. Captures in the app match the physical board at the end of the game.
+3. The exported SGF opens in Sabaki and in OGS review with the correct move list and
+   captured stones.
+4. At most one undo correction for the whole game under normal room lighting.
+
+**Why it may be worth doing first.** It needs no network account and no hardware
+purchase, and it converts the vision work into something you can actually use. If it
+slips, M4/M5 are unaffected — it is a detour, not a dependency.
 
 ---
 

@@ -45,6 +45,7 @@ camera px ──H_cam──> board mm ──orientation──> canonical board c
 | M1 | Capture, corner pick, warp, 9×9 grid, rotation, stone state |
 | M2 | Calibration wizard, bamboo hardening, fixture regression suite |
 | M3 | Rules: captures, ko, pass, resign, undo, SGF export |
+| M3.5 *(optional)* | Local referee mode: play both colours on the board, app referees and exports SGF |
 | M4 | Overlay + preview window + camera-assisted projector alignment |
 | M5 | OGS client: `--game <id>`, moves, clocks, reconnect |
 | M6 | Physical projector validation, packaging |
