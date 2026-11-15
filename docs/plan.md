@@ -4,7 +4,7 @@ Play Go on a physical board with a webcam, a projected overlay, and live games o
 
 - Owner: `drfreema`
 - Repo: `https://github.com/drfreema/goban_cast` (public, GPL-3.0)
-- Status: plan approved; M0 (bootstrap) executed
+- Status: plan approved; M0 (bootstrap) and S1 (OGS handshake) executed
 - Date: 2026-11-15
 
 ---
@@ -137,7 +137,11 @@ Scopes requested at authorize time: `read write`. `client_secret` is ignored for
 5. `GET /api/v1/ui/config` with `Authorization: Bearer <access_token>`, read `user_jwt`
 6. open the OGS WebSocket and send `["authenticate", {jwt: user_jwt, client: "goban_cast", client_version, device_id, user_agent}]`
 
-**Spike S1 (1 day, before any UI work):** if step 5/6 does not accept the OAuth token chain, fall back to sending the access token as `jwt`. This 20-line script de-risks the whole integration; keep it in `experiments/ogs_handshake.py` and log the outcome in an ADR.
+**Spike S1 (1 day, before any UI work): done 2026-11-15.** The full chain works on the
+live server: OAuth2/PKCE with a loopback redirect → bearer token → `/api/v1/ui/config`
+returns the real user's `user_jwt` → `wss://online-go.com` accepts `authenticate` and
+replies with `{id, username}`. No `client_secret`, no https fallback needed. Details
+and reproduction in ADR-0002 and `experiments/ogs_handshake.py`.
 
 ### 5.3 Protocol surface (v1)
 
@@ -162,7 +166,7 @@ v1 does **not** create challenges or run automatch. Create the 9×9 challenge on
 | # | Deliverable | Effort | Acceptance |
 | --- | --- | --- | --- |
 | M0 | Repo, license, CI, ADRs, package skeleton, geometry + tests, opencode agents/skills | 1 d | CI green; `uv run pytest` passes; plan linked from README |
-| S1 | OGS OAuth + handshake spike | 1 d | Script prints your OGS username from a live socket |
+| S1 | OGS OAuth + handshake spike | 1 d | **done** — live server confirms OAuth2/PKCE → `user_jwt` → WebSocket `authenticate` |
 | M1 | Capture, corner pick, warp, 9×9 grid, rotation, vendored detector, state dump | 2–3 d | Grid aligned to bamboo board; zero false stones over 5 min idle |
 | M2 | Calibration wizard, baselines, bamboo hardening, fixture recorder, confidence UI | 3–5 d | Survives daylight/lamp changes without recalibration; fixtures in CI |
 | M3 | Rules, captures, ko, pass, resign, undo, SGF export | 2 d | Referees a full 9×9 game played on the board |
