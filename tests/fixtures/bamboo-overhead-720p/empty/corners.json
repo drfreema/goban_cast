@@ -1,0 +1,23 @@
+{
+  "space": "camera_px",
+  "order": "tl_tr_br_bl",
+  "kind": "playable_intersections",
+  "points": [
+    [
+      536,
+      179
+    ],
+    [
+      914,
+      181
+    ],
+    [
+      918,
+      540
+    ],
+    [
+      538,
+      535
+    ]
+  ]
+}
